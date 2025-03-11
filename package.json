@@ -3,8 +3,11 @@
   "version": "0.0.1",
   "author": "vunh",
   "description": "A fork from pelias/polygon-lookup with updated dependencies",
-  "homepage": "https://github.com/pelias/polygon-lookup",
+  "homepage": "https://github.com/AhaMove/polygon-lookup.git",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -15,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/pelias/polygon-lookup.git"
+    "url": "https://github.com/AhaMove/polygon-lookup.git"
   },
   "keywords": [
     "polygon",
