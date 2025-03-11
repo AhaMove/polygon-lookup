@@ -4,7 +4,7 @@
 
 [![NPM](https://nodei.co/npm/polygon-lookup.png)](https://nodei.co/npm/polygon-lookup/) -->
 
-## Inspired by [Pelias Polygon Lookup](https://github.com/pelias/polygon-lookup) with updated dependencies and code
+## Inspired by [Pelias Polygon Lookup](https://github.com/pelias/polygon-lookup) with updated dependencies and ESM
 
 A data-structure for performing fast, accurate point-in-polygon intersections against (potentially very large) sets of
 polygons. `PolygonLookup` builds an [R-tree](http://en.wikipedia.org/wiki/R-tree), or bounding-box spatial index, for its
@@ -38,8 +38,8 @@ accessed via the `.polygons` and `.rtree` properties.
 ## example usage
 
 ```javascript
-var PolygonLookup = require( 'polygon-lookup' );
-var featureCollection = {
+import PolygonLookup = from 'polygon-lookup';
+const featureCollection = {
  type: 'FeatureCollection',
  features: [{
   type: 'Feature',
@@ -50,7 +50,7 @@ var featureCollection = {
   }
  }]
 };
-var lookup = new PolygonLookup( featureCollection );
-var poly = lookup.search( 1, 2 );
+const lookup = new PolygonLookup( featureCollection );
+const poly = lookup.search( 1, 2 );
 console.log( poly.properties.id ); // bar
 ```
