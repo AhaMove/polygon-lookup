@@ -1,0 +1,40 @@
+{
+    "env": {
+        "node": true,
+        "es2021": true
+    },
+    "plugins": [
+        "prettier",
+        "simple-import-sort",
+        "import"
+    ],
+    "extends": [
+        "eslint:recommended",
+        "airbnb-base",
+        "prettier",
+        "plugin:import/recommended"
+    ],
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+    },
+    "rules": {
+        "no-plusplus": "off",
+        "import/extensions": "off",
+        "import/no-extraneous-dependencies": "off",
+        "dot-notation": "off",
+        "import/namespace": "off",
+        "simple-import-sort/imports": "error",
+        "simple-import-sort/exports": "error",
+        "import/first": "error",
+        "import/newline-after-import": "error",
+        "import/no-duplicates": "error",
+        "prettier/prettier": [
+            "error",
+            {
+                "printWidth": 110,
+                "trailingComma": "none"
+            }
+        ]
+    }
+}

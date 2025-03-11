@@ -1,0 +1,57 @@
+{
+  "name": "@ahamove/polygon-lookup",
+  "version": "0.0.1",
+  "author": "vunh",
+  "description": "A fork from pelias/polygon-lookup with updated dependencies",
+  "homepage": "https://github.com/pelias/polygon-lookup",
+  "license": "MIT",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test/test.js | tap-spec",
+    "ci": "npm test",
+    "lint": "eslint .",
+    "validate": "npm ls"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pelias/polygon-lookup.git"
+  },
+  "keywords": [
+    "polygon",
+    "lookup",
+    "intersection",
+    "coarse"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@turf/boolean-point-in-polygon": "^7.2.0",
+    "@turf/helpers": "^7.2.0",
+    "rbush": "4.0.1",
+    "upgraded-polygon-lookup": "^0.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "jshint": "^2.13.6",
+    "precommit-hook": "^3.0.0",
+    "prettier": "^3.5.3",
+    "tap-spec": "^5.0.0",
+    "tape": "^4.17.0"
+  },
+  "pre-commit": [
+    "lint",
+    "validate",
+    "test"
+  ],
+  "release": {
+    "success": []
+  }
+}
