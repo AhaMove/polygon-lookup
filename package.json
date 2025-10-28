@@ -1,6 +1,6 @@
 {
   "name": "@ahamove/polygon-lookup",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "author": "vunh",
   "description": "A fork from pelias/polygon-lookup with updated dependencies",
   "homepage": "https://github.com/AhaMove/polygon-lookup.git",
@@ -8,11 +8,24 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "vitest run",
+    "prebuild": "rm -rf dist",
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "pnpm build",
+    "test": "pnpm type-check && vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
@@ -42,20 +55,26 @@
   },
   "devDependencies": {
     "@types/geojson": "^7946.0.16",
+    "@types/rbush": "^4.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
     "@vitest/ui": "^2.1.8",
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "jshint": "^2.13.6",
     "precommit-hook": "^3.0.0",
     "prettier": "^3.5.3",
+    "typescript": "^5.9.3",
     "vitest": "^2.1.8"
   },
   "pre-commit": [
     "lint",
+    "type-check",
     "validate",
     "test"
   ],
