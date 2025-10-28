@@ -10,7 +10,13 @@ import Rbush from "rbush";
 
 import { getBoundingBox } from "./utils.js";
 
-// Calculate point in polygon intersection, accounting for any holes
+/**
+ * Calculate point in polygon intersection, accounting for any holes.
+ * @private
+ * @param {number[]} point - The [x, y] coordinate to test.
+ * @param {object} polygons - A GeoJSON Feature with Polygon geometry.
+ * @return {boolean} True if the point is inside the polygon (and not in any holes), false otherwise.
+ */
 function pointInPolygonWithHoles(point, polygons) {
   const mainPolygon = polygons.geometry.coordinates[0];
   // Create a GeoJSON point using turf.point
@@ -47,8 +53,12 @@ class PolygonLookup {
     }
   }
 
-  /*
-   * Internal helper method to return a single matching polygon
+  /**
+   * Internal helper method to return a single matching polygon.
+   * @private
+   * @param {number} x - The x-coordinate to search for.
+   * @param {number} y - The y-coordinate to search for.
+   * @return {object|undefined} The first polygon that intersects (x, y), or undefined if none found.
    */
   searchForOnePolygon(x, y) {
     // find which bboxes contain the search point. their polygons _may_ intersect that point
@@ -57,14 +67,18 @@ class PolygonLookup {
     const point = [x, y];
 
     // get the polygon for each possibly matching polygon based on the searched bboxes
-    const polygons = bboxes.map((bbox, index) => this.polygons[bboxes[index].polyId]);
+    const polygons = bboxes.map((bbox) => this.polygons[bbox.polyId]);
 
     return polygons.find((poly) => pointInPolygonWithHoles(point, poly));
   }
 
-  /*
+  /**
    * Internal helper method to return multiple matching polygons, up to a given limit.
-   * A limit of -1 means unlimited
+   * @private
+   * @param {number} x - The x-coordinate to search for.
+   * @param {number} y - The y-coordinate to search for.
+   * @param {number} limit - Maximum number of results to return. Use -1 for unlimited.
+   * @return {object} A GeoJSON FeatureCollection containing matching polygons (up to limit).
    */
   searchForMultiplePolygons(x, y, limit) {
     const safeLimit = limit === -1 ? Number.MAX_SAFE_INTEGER : limit;
@@ -73,7 +87,7 @@ class PolygonLookup {
     const bboxes = this.rtree.search({ minX: x, minY: y, maxX: x, maxY: y });
 
     // get the polygon for each possibly matching polygon based on the searched bboxes
-    let polygons = bboxes.map((bbox, index) => this.polygons[bboxes[index].polyId]);
+    let polygons = bboxes.map((bbox) => this.polygons[bbox.polyId]);
 
     // keep track of matches to avoid extra expensive calculations if limit reached
     let matchesFound = 0;
@@ -124,8 +138,21 @@ class PolygonLookup {
    * the index in this `PolygonLookup`.
    *
    * @param {object} collection A GeoJSON-formatted FeatureCollection.
+   * @throws {Error} If collection is null, undefined, or missing features property.
    */
   loadFeatureCollection(collection) {
+    if (!collection) {
+      throw new Error("PolygonLookup.loadFeatureCollection: collection parameter is required");
+    }
+
+    if (!collection.features) {
+      throw new Error("PolygonLookup.loadFeatureCollection: collection must have a 'features' property");
+    }
+
+    if (!Array.isArray(collection.features)) {
+      throw new Error("PolygonLookup.loadFeatureCollection: collection.features must be an array");
+    }
+
     const bboxes = [];
     const polygons = [];
     let polyId = 0;
