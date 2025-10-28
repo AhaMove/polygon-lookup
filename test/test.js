@@ -248,9 +248,9 @@ tape("PolygonLookup.search method respects limit parameter", (test) => {
     const point = [3, 3];
     const result = lookup.search(point[0], point[1], 1);
 
-    test.equal(result.type, "FeatureCollection", "Returns FeatureCollection");
-    test.equal(result.features.length, 1, "Contains one feature");
-    test.equal(result.features[0].properties.id, 1, "Contains first matching polygon");
+    t.equal(result.type, "FeatureCollection", "Returns FeatureCollection");
+    t.equal(result.features.length, 1, "Contains one feature");
+    t.equal(result.features[0].properties.id, 1, "Contains first matching polygon");
     t.end();
   });
 
@@ -258,10 +258,10 @@ tape("PolygonLookup.search method respects limit parameter", (test) => {
     const point = [3, 3];
     const result = lookup.search(point[0], point[1], -1);
 
-    test.equal(result.type, "FeatureCollection", "Returns FeatureCollection");
-    test.equal(result.features.length, 2, "Contains all matching features");
-    test.equal(result.features[0].properties.id, 1, "Contains first polygon");
-    test.equal(result.features[1].properties.id, 3, "Contains second polygon");
+    t.equal(result.type, "FeatureCollection", "Returns FeatureCollection");
+    t.equal(result.features.length, 2, "Contains all matching features");
+    t.equal(result.features[0].properties.id, 1, "Contains first polygon");
+    t.equal(result.features[1].properties.id, 3, "Contains second polygon");
     t.end();
   });
 
@@ -269,8 +269,8 @@ tape("PolygonLookup.search method respects limit parameter", (test) => {
     const point = [10, 10];
     const result = lookup.search(point[0], point[1], -1);
 
-    test.equal(result.type, "FeatureCollection", "Returns FeatureCollection");
-    test.equal(result.features.length, 0, "Contains no features");
+    t.equal(result.type, "FeatureCollection", "Returns FeatureCollection");
+    t.equal(result.features.length, 0, "Contains no features");
     t.end();
   });
 
@@ -278,7 +278,7 @@ tape("PolygonLookup.search method respects limit parameter", (test) => {
     const point = [10, 10];
     const result = lookup.search(point[0], point[1]);
 
-    test.equal(result, undefined, "Returns undefined");
+    t.equal(result, undefined, "Returns undefined");
     t.end();
   });
 });
