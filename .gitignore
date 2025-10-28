@@ -1,6 +1,37 @@
-node_modules
-npm-debug.log
-.DS_Store
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 esclient.log
 
+# Operating System
+.DS_Store
+Thumbs.db
 
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Example/test files
+main.js
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# AI
+CLAUDE.md
+
+# Repomix
+repomix-output.xml
