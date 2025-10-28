@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
 
+# Build output
+dist/
+*.tsbuildinfo
+
 # Package manager files
 pnpm-lock.yaml
 .pnpm-debug.log
@@ -37,6 +41,7 @@ main.js
 
 # AI
 CLAUDE.md
+.claude
 
 # Repomix
 repomix-output.xml

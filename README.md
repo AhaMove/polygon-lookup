@@ -4,13 +4,19 @@
 
 [![NPM](https://nodei.co/npm/polygon-lookup.png)](https://nodei.co/npm/polygon-lookup/) -->
 
-## Inspired by [Pelias Polygon Lookup](https://github.com/pelias/polygon-lookup) with updated dependencies and ESM
+## Inspired by [Pelias Polygon Lookup](https://github.com/pelias/polygon-lookup) with TypeScript, updated dependencies, and ESM
 
 A data-structure for performing fast, accurate point-in-polygon intersections against (potentially very large) sets of
 polygons. `PolygonLookup` builds an [R-tree](http://en.wikipedia.org/wiki/R-tree), or bounding-box spatial index, for its
 polygons and uses it to quickly narrow down the set of candidate polygons for any given point. If there are any
 ambiguities, it'll perform point-in-polygon intersections to identify the one that *really* intersects. `PolygonLookup`
 operates entirely in memory, and works best for polygons with little overlap.
+
+**Features:**
+- ✅ TypeScript with full type safety
+- ✅ ESM module support
+- ✅ Updated dependencies
+- ✅ Comprehensive type definitions
 
 ## API
 
@@ -39,10 +45,11 @@ accessed via the `.polygons` and `.rtree` properties.
 
 ### Basic Usage
 
-```javascript
+```typescript
 import PolygonLookup from '@ahamove/polygon-lookup';
+import type { FeatureCollection, Polygon } from 'geojson';
 
-const featureCollection = {
+const featureCollection: FeatureCollection<Polygon> = {
   type: 'FeatureCollection',
   features: [{
     type: 'Feature',
