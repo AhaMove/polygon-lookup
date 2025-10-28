@@ -1,6 +1,6 @@
 {
   "name": "@ahamove/polygon-lookup",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "vunh",
   "description": "A fork from pelias/polygon-lookup with updated dependencies",
   "homepage": "https://github.com/AhaMove/polygon-lookup.git",
@@ -9,6 +9,7 @@
     "access": "public"
   },
   "main": "index.js",
+  "types": "index.d.ts",
   "type": "module",
   "scripts": {
     "test": "vitest run",
@@ -40,6 +41,7 @@
     "rbush": "4.0.1"
   },
   "devDependencies": {
+    "@types/geojson": "^7946.0.16",
     "@vitest/ui": "^2.1.8",
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
