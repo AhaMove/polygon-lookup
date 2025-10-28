@@ -1,6 +1,6 @@
 {
   "name": "@ahamove/polygon-lookup",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "vunh",
   "description": "A fork from pelias/polygon-lookup with updated dependencies",
   "homepage": "https://github.com/AhaMove/polygon-lookup.git",
@@ -15,9 +15,9 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "ci": "npm test",
+    "ci": "pnpm test",
     "lint": "eslint .",
-    "validate": "npm ls"
+    "validate": "pnpm ls"
   },
   "repository": {
     "type": "git",
@@ -31,8 +31,9 @@
   ],
   "engines": {
     "node": ">=18.0.0",
-    "npm": ">=10.0.0"
+    "pnpm": ">=8.0.0"
   },
+  "packageManager": "pnpm@10.19.0",
   "dependencies": {
     "@turf/boolean-point-in-polygon": "^7.2.0",
     "@turf/helpers": "^7.2.0",
