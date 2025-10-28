@@ -37,5 +37,13 @@
                 "trailingComma": "none"
             }
         ]
-    }
+    },
+    "overrides": [
+        {
+            "files": ["vitest.config.js"],
+            "rules": {
+                "import/no-unresolved": "off"
+            }
+        }
+    ]
 }

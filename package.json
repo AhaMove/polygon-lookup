@@ -11,7 +11,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "node test/test.js | tap-spec",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "ci": "npm test",
     "lint": "eslint .",
     "validate": "npm ls"
@@ -36,6 +39,7 @@
     "rbush": "4.0.1"
   },
   "devDependencies": {
+    "@vitest/ui": "^2.1.8",
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^9.1.0",
@@ -45,8 +49,7 @@
     "jshint": "^2.13.6",
     "precommit-hook": "^3.0.0",
     "prettier": "^3.5.3",
-    "tap-spec": "^5.0.0",
-    "tape": "^4.17.0"
+    "vitest": "^2.1.8"
   },
   "pre-commit": [
     "lint",
