@@ -2,16 +2,17 @@
  * @file The package's unit tests.
  */
 
+import type { Feature, FeatureCollection, Polygon, Position } from "geojson";
 import rbush from "rbush";
 import { describe, expect, test } from "vitest";
 
-import PolygonLookup from "../index.js";
-import { getBoundingBox } from "../utils.js";
+import PolygonLookup from "../src/index.js";
+import { getBoundingBox } from "../src/utils.js";
 
 /**
  * Convenience function for creating a GeoJSON polygon.
  */
-function geojsonPoly(coords, props) {
+function geojsonPoly(coords: Position[][], props?: Record<string, unknown>): Feature<Polygon> {
   return {
     type: "Feature",
     properties: props || {},
@@ -33,7 +34,7 @@ describe("PolygonLookup", () => {
 
 describe("PolygonLookup.loadFeatureCollection", () => {
   test("method sets properties", () => {
-    const collection = {
+    const collection: FeatureCollection<Polygon> = {
       type: "FeatureCollection",
       features: [
         {
@@ -61,7 +62,7 @@ describe("PolygonLookup.loadFeatureCollection", () => {
 
 describe("PolygonLookup.search", () => {
   test("method searches correctly", () => {
-    const collection = {
+    const collection: FeatureCollection<Polygon> = {
       type: "FeatureCollection",
       features: [
         geojsonPoly(
@@ -116,9 +117,13 @@ describe("PolygonLookup.search", () => {
 
     testCases.forEach((testCase) => {
       const pt = testCase.point;
-      const poly = lookup.search(pt[0], pt[1]);
+      const x = pt[0];
+      const y = pt[1];
+      if (x === undefined || y === undefined) return;
+
+      const poly = lookup.search(x, y);
       if ("id" in testCase) {
-        expect(poly.properties.id).toBe(testCase.id);
+        expect(poly?.properties?.["id"]).toBe(testCase.id);
       } else {
         expect(poly).toBeUndefined();
       }
@@ -128,14 +133,14 @@ describe("PolygonLookup.search", () => {
 
 describe("PolygonLookup.search with multiple rings", () => {
   test("method handles polygons with multiple rings", () => {
-    const poly1Hole = [
+    const poly1Hole: Position[] = [
       [3, 3],
       [6, 3],
       [6, 7],
       [4, 6],
       [3, 3]
     ];
-    const collection = {
+    const collection: FeatureCollection<Polygon> = {
       type: "FeatureCollection",
       features: [
         geojsonPoly(
@@ -185,18 +190,22 @@ describe("PolygonLookup.search with multiple rings", () => {
 
     testCases.forEach((testCase) => {
       const pt = testCase.point;
-      const poly = lookup.search(pt[0], pt[1]);
+      const x = pt[0];
+      const y = pt[1];
+      if (x === undefined || y === undefined) return;
+
+      const poly = lookup.search(x, y);
       if (!("id" in testCase)) {
         expect(poly).toBeUndefined();
       } else {
-        expect(poly.properties.id).toBe(testCase.id);
+        expect(poly?.properties?.["id"]).toBe(testCase.id);
       }
     });
   });
 });
 
 describe("PolygonLookup.search with limit parameter", () => {
-  const collection = {
+  const collection: FeatureCollection<Polygon> = {
     type: "FeatureCollection",
     features: [
       geojsonPoly(
@@ -239,32 +248,48 @@ describe("PolygonLookup.search with limit parameter", () => {
 
   test("no limit returns first matching polygon", () => {
     const point = [3, 3];
-    const result = lookup.search(point[0], point[1]);
-    expect(result.properties.id).toBe(1);
+    const x = point[0];
+    const y = point[1];
+    if (x === undefined || y === undefined) return;
+
+    const result = lookup.search(x, y);
+    expect(result?.properties?.["id"]).toBe(1);
   });
 
   test("limit=1 returns FeatureCollection with one polygon", () => {
     const point = [3, 3];
-    const result = lookup.search(point[0], point[1], 1);
+    const x = point[0];
+    const y = point[1];
+    if (x === undefined || y === undefined) return;
+
+    const result = lookup.search(x, y, 1);
 
     expect(result.type).toBe("FeatureCollection");
     expect(result.features.length).toBe(1);
-    expect(result.features[0].properties.id).toBe(1);
+    expect(result.features[0]?.properties?.["id"]).toBe(1);
   });
 
   test("limit=-1 returns all matching polygons", () => {
     const point = [3, 3];
-    const result = lookup.search(point[0], point[1], -1);
+    const x = point[0];
+    const y = point[1];
+    if (x === undefined || y === undefined) return;
+
+    const result = lookup.search(x, y, -1);
 
     expect(result.type).toBe("FeatureCollection");
     expect(result.features.length).toBe(2);
-    expect(result.features[0].properties.id).toBe(1);
-    expect(result.features[1].properties.id).toBe(3);
+    expect(result.features[0]?.properties?.["id"]).toBe(1);
+    expect(result.features[1]?.properties?.["id"]).toBe(3);
   });
 
   test("no matches with limit=-1 returns empty FeatureCollection", () => {
     const point = [10, 10];
-    const result = lookup.search(point[0], point[1], -1);
+    const x = point[0];
+    const y = point[1];
+    if (x === undefined || y === undefined) return;
+
+    const result = lookup.search(x, y, -1);
 
     expect(result.type).toBe("FeatureCollection");
     expect(result.features.length).toBe(0);
@@ -272,7 +297,11 @@ describe("PolygonLookup.search with limit parameter", () => {
 
   test("no matches with no limit returns undefined", () => {
     const point = [10, 10];
-    const result = lookup.search(point[0], point[1]);
+    const x = point[0];
+    const y = point[1];
+    if (x === undefined || y === undefined) return;
+
+    const result = lookup.search(x, y);
 
     expect(result).toBeUndefined();
   });
@@ -325,11 +354,15 @@ describe("getBoundingBox utility", () => {
 describe("PolygonLookup edge cases", () => {
   test("handles undefined geometries gracefully", () => {
     const collection = {
-      type: "FeatureCollection",
+      type: "FeatureCollection" as const,
       features: [
         {
-          type: "Feature",
-          properties: {}
+          type: "Feature" as const,
+          properties: {},
+          geometry: {
+            type: "Polygon" as const,
+            coordinates: [] as Position[][]
+          }
         }
       ]
     };
