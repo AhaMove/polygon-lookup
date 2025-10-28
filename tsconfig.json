@@ -10,6 +10,7 @@
     "resolveJsonModule": true,
 
     /* Emit */
+    "rootDir": "./src",
     "outDir": "./dist",
     "declaration": true,
     "declarationMap": true,
@@ -34,6 +35,6 @@
     /* Completeness */
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "test/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
