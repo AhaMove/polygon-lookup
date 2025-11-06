@@ -17,7 +17,7 @@ operates entirely in memory, and works best for polygons with little overlap.
 - ✅ ESM module support
 - ✅ Updated dependencies
 - ✅ Comprehensive type definitions
-- ✅ Optional Flatbush backend for 2-4x faster performance
+- ✅ Optional [Flatbush](https://github.com/mourner/flatbush) backend for 2-4x faster performance
 
 ## Performance Optimization with Flatbush
 
@@ -59,15 +59,19 @@ const result = lookupFast.search(-77.0369, 38.8977);
 
 ### Performance Comparison
 
-Benchmark with 100,000 polygons:
+Official Flatbush benchmarks with 1,000,000 rectangles (Node v14):
 
 | Operation | RBush | Flatbush | Speedup |
 |-----------|-------|----------|---------|
-| Build index | 380ms | 91ms | **4.2x faster** |
-| Query (1% area) | 5.2ms | 2.1ms | **2.5x faster** |
-| Memory usage | 45MB | 15MB | **67% reduction** |
+| Index 1,000,000 rectangles | 1143ms | 273ms | **4.2x faster** |
+| 1000 searches (10% area) | 781ms | 575ms | **1.4x faster** |
+| 1000 searches (1% area) | 155ms | 63ms | **2.5x faster** |
+| 1000 searches (0.01% area) | 17ms | 6ms | **2.8x faster** |
+| 1000 searches of 100 neighbors | 43ms | 24ms | **1.8x faster** |
+| 1 search of 1,000,000 neighbors | 280ms | 133ms | **2.1x faster** |
+| 100,000 searches of 1 neighbor | 1170ms | 710ms | **1.6x faster** |
 
-*Benchmarks run on Node.js 18, M1 Mac*
+*Source: [mourner/flatbush](https://github.com/mourner/flatbush) benchmarks*
 
 #### Performance Characteristics
 
