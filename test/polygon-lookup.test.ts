@@ -3,7 +3,6 @@
  */
 
 import type { Feature, FeatureCollection, Polygon, Position } from "geojson";
-import rbush from "rbush";
 import { describe, expect, test } from "vitest";
 
 import PolygonLookup from "../src/index.js";
@@ -32,8 +31,11 @@ describe("PolygonLookup", () => {
   });
 });
 
-describe("PolygonLookup.loadFeatureCollection", () => {
-  test("method sets properties", () => {
+describe.each([
+  ["rbush", { indexType: "rbush" as const }],
+  ["flatbush", { indexType: "flatbush" as const }]
+])("PolygonLookup with %s backend", (backendName, options) => {
+  test("loadFeatureCollection method sets properties", () => {
     const collection: FeatureCollection<Polygon> = {
       type: "FeatureCollection",
       features: [
@@ -55,13 +57,10 @@ describe("PolygonLookup.loadFeatureCollection", () => {
 
     const lookup = new PolygonLookup();
     lookup.loadFeatureCollection(collection);
-    expect(lookup.rtree).toBeInstanceOf(rbush);
     expect(lookup.polygons).toEqual(collection.features);
   });
-});
 
-describe("PolygonLookup.search", () => {
-  test("method searches correctly", () => {
+  test("search method searches correctly", () => {
     const collection: FeatureCollection<Polygon> = {
       type: "FeatureCollection",
       features: [
@@ -101,7 +100,7 @@ describe("PolygonLookup.search", () => {
       ]
     };
 
-    const lookup = new PolygonLookup(collection);
+    const lookup = new PolygonLookup(collection, options);
     const testCases = [
       { point: [1, 5] },
       { point: [6, 3] },
@@ -129,10 +128,8 @@ describe("PolygonLookup.search", () => {
       }
     });
   });
-});
 
-describe("PolygonLookup.search with multiple rings", () => {
-  test("method handles polygons with multiple rings", () => {
+  test("search method handles polygons with multiple rings", () => {
     const poly1Hole: Position[] = [
       [3, 3],
       [6, 3],
@@ -179,7 +176,7 @@ describe("PolygonLookup.search with multiple rings", () => {
         geojsonPoly([poly1Hole], { id: 2 })
       ]
     };
-    const lookup = new PolygonLookup(collection);
+    const lookup = new PolygonLookup(collection, options);
 
     const testCases = [
       { point: [10, 12], id: 0 },
@@ -202,108 +199,128 @@ describe("PolygonLookup.search with multiple rings", () => {
       }
     });
   });
-});
 
-describe("PolygonLookup.search with limit parameter", () => {
-  const collection: FeatureCollection<Polygon> = {
-    type: "FeatureCollection",
-    features: [
-      geojsonPoly(
-        [
+  describe("search with limit parameter", () => {
+    const collection: FeatureCollection<Polygon> = {
+      type: "FeatureCollection",
+      features: [
+        geojsonPoly(
           [
-            [2, 2],
-            [6, 4],
-            [4, 7],
-            [2, 2]
-          ]
-        ],
-        { id: 1 }
-      ),
-      geojsonPoly(
-        [
+            [
+              [2, 2],
+              [6, 4],
+              [4, 7],
+              [2, 2]
+            ]
+          ],
+          { id: 1 }
+        ),
+        geojsonPoly(
           [
-            [3, 0],
-            [7, 2],
-            [4, 4],
-            [3, 0]
-          ]
-        ],
-        { id: 2 }
-      ),
-      geojsonPoly(
-        [
+            [
+              [3, 0],
+              [7, 2],
+              [4, 4],
+              [3, 0]
+            ]
+          ],
+          { id: 2 }
+        ),
+        geojsonPoly(
           [
-            [1, 0],
-            [10, 2],
-            [2, 7],
-            [1, 0]
-          ]
-        ],
-        { id: 3 }
-      )
-    ]
-  };
+            [
+              [1, 0],
+              [10, 2],
+              [2, 7],
+              [1, 0]
+            ]
+          ],
+          { id: 3 }
+        )
+      ]
+    };
 
-  const lookup = new PolygonLookup(collection);
+    const lookup = new PolygonLookup(collection, options);
 
-  test("no limit returns first matching polygon", () => {
-    const point = [3, 3];
-    const x = point[0];
-    const y = point[1];
-    if (x === undefined || y === undefined) return;
+    test("no limit returns first matching polygon", () => {
+      const point = [3, 3];
+      const x = point[0];
+      const y = point[1];
+      if (x === undefined || y === undefined) return;
 
-    const result = lookup.search(x, y);
-    expect(result?.properties?.["id"]).toBe(1);
+      const result = lookup.search(x, y);
+      expect(result?.properties?.["id"]).toBe(1);
+    });
+
+    test("limit=1 returns FeatureCollection with one polygon", () => {
+      const point = [3, 3];
+      const x = point[0];
+      const y = point[1];
+      if (x === undefined || y === undefined) return;
+
+      const result = lookup.search(x, y, 1);
+
+      expect(result.type).toBe("FeatureCollection");
+      expect(result.features.length).toBe(1);
+      expect(result.features[0]?.properties?.["id"]).toBe(1);
+    });
+
+    test("limit=-1 returns all matching polygons", () => {
+      const point = [3, 3];
+      const x = point[0];
+      const y = point[1];
+      if (x === undefined || y === undefined) return;
+
+      const result = lookup.search(x, y, -1);
+
+      expect(result.type).toBe("FeatureCollection");
+      expect(result.features.length).toBe(2);
+      expect(result.features[0]?.properties?.["id"]).toBe(1);
+      expect(result.features[1]?.properties?.["id"]).toBe(3);
+    });
+
+    test("no matches with limit=-1 returns empty FeatureCollection", () => {
+      const point = [10, 10];
+      const x = point[0];
+      const y = point[1];
+      if (x === undefined || y === undefined) return;
+
+      const result = lookup.search(x, y, -1);
+
+      expect(result.type).toBe("FeatureCollection");
+      expect(result.features.length).toBe(0);
+    });
+
+    test("no matches with no limit returns undefined", () => {
+      const point = [10, 10];
+      const x = point[0];
+      const y = point[1];
+      if (x === undefined || y === undefined) return;
+
+      const result = lookup.search(x, y);
+
+      expect(result).toBeUndefined();
+    });
   });
 
-  test("limit=1 returns FeatureCollection with one polygon", () => {
-    const point = [3, 3];
-    const x = point[0];
-    const y = point[1];
-    if (x === undefined || y === undefined) return;
+  test("handles undefined geometries gracefully", () => {
+    const collection = {
+      type: "FeatureCollection" as const,
+      features: [
+        {
+          type: "Feature" as const,
+          properties: {},
+          geometry: {
+            type: "Polygon" as const,
+            coordinates: [] as Position[][]
+          }
+        }
+      ]
+    };
 
-    const result = lookup.search(x, y, 1);
-
-    expect(result.type).toBe("FeatureCollection");
-    expect(result.features.length).toBe(1);
-    expect(result.features[0]?.properties?.["id"]).toBe(1);
-  });
-
-  test("limit=-1 returns all matching polygons", () => {
-    const point = [3, 3];
-    const x = point[0];
-    const y = point[1];
-    if (x === undefined || y === undefined) return;
-
-    const result = lookup.search(x, y, -1);
-
-    expect(result.type).toBe("FeatureCollection");
-    expect(result.features.length).toBe(2);
-    expect(result.features[0]?.properties?.["id"]).toBe(1);
-    expect(result.features[1]?.properties?.["id"]).toBe(3);
-  });
-
-  test("no matches with limit=-1 returns empty FeatureCollection", () => {
-    const point = [10, 10];
-    const x = point[0];
-    const y = point[1];
-    if (x === undefined || y === undefined) return;
-
-    const result = lookup.search(x, y, -1);
-
-    expect(result.type).toBe("FeatureCollection");
-    expect(result.features.length).toBe(0);
-  });
-
-  test("no matches with no limit returns undefined", () => {
-    const point = [10, 10];
-    const x = point[0];
-    const y = point[1];
-    if (x === undefined || y === undefined) return;
-
-    const result = lookup.search(x, y);
-
-    expect(result).toBeUndefined();
+    const lookup = new PolygonLookup();
+    lookup.loadFeatureCollection(collection);
+    expect(lookup.polygons).toBeDefined();
   });
 });
 
@@ -348,27 +365,5 @@ describe("getBoundingBox utility", () => {
       const bbox = getBoundingBox(testCase.poly);
       expect(bbox).toEqual(testCase.bbox);
     });
-  });
-});
-
-describe("PolygonLookup edge cases", () => {
-  test("handles undefined geometries gracefully", () => {
-    const collection = {
-      type: "FeatureCollection" as const,
-      features: [
-        {
-          type: "Feature" as const,
-          properties: {},
-          geometry: {
-            type: "Polygon" as const,
-            coordinates: [] as Position[][]
-          }
-        }
-      ]
-    };
-
-    const lookup = new PolygonLookup();
-    lookup.loadFeatureCollection(collection);
-    expect(lookup.rtree).toBeInstanceOf(rbush);
   });
 });

@@ -6,11 +6,12 @@
 
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
 import * as turf from "@turf/helpers";
+import Flatbush from "flatbush";
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import type RBush from "rbush";
 import Rbush from "rbush";
 
-import type { BoundingBox } from "./types.js";
+import type { BoundingBox, PolygonLookupOptions } from "./types.js";
 import { getBoundingBox } from "./utils.js";
 
 /**
@@ -52,25 +53,128 @@ function pointInPolygonWithHoles(point: number[], polygon: Feature<Polygon>): bo
 
 class PolygonLookup {
   /**
-   * R-tree spatial index containing bounding boxes with polygon references.
+   * The type of spatial index being used.
    */
-  rtree!: RBush<BoundingBox>;
+  private indexType: "rbush" | "flatbush";
+
+  /**
+   * Optional custom node size for the spatial index.
+   */
+  private nodeSize?: number;
+
+  /**
+   * R-tree spatial index containing bounding boxes with polygon references.
+   * Used when indexType is 'rbush'.
+   */
+  private rtree: RBush<BoundingBox> | null = null;
+
+  /**
+   * Flatbush spatial index.
+   * Used when indexType is 'flatbush'.
+   */
+  private flatIndex: Flatbush | null = null;
+
+  /**
+   * Array of bounding box data for Flatbush index lookup.
+   * Flatbush returns indices, so we need to store bbox objects separately.
+   */
+  private bboxData: BoundingBox[] = [];
 
   /**
    * Array of indexed GeoJSON polygon features.
    */
-  polygons!: Array<Feature<Polygon>>;
+  polygons: Array<Feature<Polygon>> = [];
 
   /**
    * Create a new PolygonLookup instance.
    *
    * @param featureCollection - Optional GeoJSON FeatureCollection to index immediately
+   * @param options - Configuration options
+   * @param options.indexType - Spatial index backend ('rbush' or 'flatbush')
+   * @param options.nodeSize - Node size for spatial index (affects performance)
    * @throws Error if featureCollection is invalid
+   *
+   * @example
+   * // Default: RBush backend
+   * const lookup = new PolygonLookup(geojson);
+   *
+   * @example
+   * // Performance mode: Flatbush backend
+   * const lookup = new PolygonLookup(geojson, { indexType: 'flatbush' });
    */
-  constructor(featureCollection?: FeatureCollection<Polygon | MultiPolygon>) {
+  constructor(featureCollection?: FeatureCollection<Polygon | MultiPolygon>, options?: PolygonLookupOptions) {
+    this.indexType = options?.indexType ?? "rbush";
+    this.nodeSize = options?.nodeSize ?? undefined;
+    this.polygons = [];
+    this.bboxData = [];
+
     if (featureCollection !== undefined) {
       this.loadFeatureCollection(featureCollection);
     }
+  }
+
+  /**
+   * Build RBush spatial index from bounding boxes.
+   * @private
+   * @param bboxes - Array of bounding boxes with polyId references
+   */
+  private buildRbushIndex(bboxes: BoundingBox[]): void {
+    const nodeSize = this.nodeSize !== undefined ? this.nodeSize : 9;
+    this.rtree = new Rbush<BoundingBox>(nodeSize).load(bboxes);
+    this.flatIndex = null; // Clear other index
+  }
+
+  /**
+   * Build Flatbush spatial index from bounding boxes.
+   * @private
+   * @param bboxes - Array of bounding boxes with polyId references
+   */
+  private buildFlatbushIndex(bboxes: BoundingBox[]): void {
+    const nodeSize = this.nodeSize !== undefined ? this.nodeSize : 16;
+    this.flatIndex = new Flatbush(bboxes.length, nodeSize);
+
+    // Add all bounding boxes
+    for (let i = 0; i < bboxes.length; i++) {
+      const bbox = bboxes[i]!;
+      this.flatIndex.add(bbox.minX, bbox.minY, bbox.maxX, bbox.maxY);
+    }
+
+    // Finalize index (required before searching)
+    this.flatIndex.finish();
+    this.rtree = null; // Clear other index
+  }
+
+  /**
+   * Search for bounding boxes using RBush index.
+   * @private
+   * @param x - The x-coordinate to search for
+   * @param y - The y-coordinate to search for
+   * @returns Array of bounding boxes that may contain the point
+   */
+  private searchRbush(x: number, y: number): BoundingBox[] {
+    if (!this.rtree) {
+      return [];
+    }
+    return this.rtree.search({ minX: x, minY: y, maxX: x, maxY: y });
+  }
+
+  /**
+   * Search for bounding boxes using Flatbush index.
+   * @private
+   * @param x - The x-coordinate to search for
+   * @param y - The y-coordinate to search for
+   * @returns Array of bounding boxes that may contain the point
+   */
+  private searchFlatbush(x: number, y: number): BoundingBox[] {
+    if (!this.flatIndex) {
+      return [];
+    }
+
+    // Flatbush returns indices, not the actual bbox objects
+    const indices = this.flatIndex.search(x, y, x, y);
+
+    // Map indices back to bbox objects
+    return indices.map((idx) => this.bboxData[idx]!);
   }
 
   /**
@@ -82,7 +186,7 @@ class PolygonLookup {
    */
   private searchForOnePolygon(x: number, y: number): Feature<Polygon> | undefined {
     // find which bboxes contain the search point. their polygons _may_ intersect that point
-    const bboxes = this.rtree.search({ minX: x, minY: y, maxX: x, maxY: y });
+    const bboxes = this.indexType === "flatbush" ? this.searchFlatbush(x, y) : this.searchRbush(x, y);
 
     const point = [x, y];
 
@@ -104,7 +208,7 @@ class PolygonLookup {
     const safeLimit = limit === -1 ? Number.MAX_SAFE_INTEGER : limit;
 
     const point = [x, y];
-    const bboxes = this.rtree.search({ minX: x, minY: y, maxX: x, maxY: y });
+    const bboxes = this.indexType === "flatbush" ? this.searchFlatbush(x, y) : this.searchRbush(x, y);
 
     // get the polygon for each possibly matching polygon based on the searched bboxes
     let polygons = bboxes.map((bbox) => this.polygons[bbox.polyId!]!);
@@ -246,8 +350,17 @@ class PolygonLookup {
     };
 
     collection.features.forEach(indexFeature);
-    this.rtree = new Rbush<BoundingBox>().load(bboxes);
+
+    // Store bbox data for later retrieval with flatbush
+    this.bboxData = bboxes;
     this.polygons = polygons;
+
+    // Build spatial index based on type
+    if (this.indexType === "flatbush") {
+      this.buildFlatbushIndex(bboxes);
+    } else {
+      this.buildRbushIndex(bboxes);
+    }
   }
 }
 
