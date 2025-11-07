@@ -1,6 +1,6 @@
 {
   "name": "@ahamove/polygon-lookup",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": "vunh",
   "description": "A fork from pelias/polygon-lookup with updated dependencies",
   "homepage": "https://github.com/AhaMove/polygon-lookup.git",
